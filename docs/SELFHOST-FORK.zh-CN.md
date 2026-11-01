@@ -49,3 +49,21 @@ org.b3log.siyuan.debug，不覆盖官方 App。界面保持原样。
 Android ARM64 测试 APK 已成功编译，但尚未进行实体手机操作验证。
 
 断网失败后的重试间隔沿用上游策略，可能等待数分钟；自动重连测试通过公开设置重置为 30 秒周期，验证由定时任务自动上传。
+
+## 本次测试记录
+
+实际编译源码：de7130c21da5c62090829cb377ee03d99f97bdb2。
+Android、Linux 内核、共享界面和双工作空间 WebDAV 联调均构建/执行成功：
+https://github.com/xyychenchen/siyuan/actions/runs/41281349799
+
+扩展受影响测试：2905 项，2893 通过，2 失败，10 跳过。
+两项失败候选单独与未修改的官方基线比较：两边都是 18 项中 17 通过、1 失败；
+列表脑图用例在原版也失败，反链面板用例单独重测时两边均通过。不能称完整测试全绿。
+对比记录：https://github.com/xyychenchen/siyuan/actions/runs/41281949678
+
+当前连接的 GitHub 发布接口没有创建 Release 的权限，因此安装包通过 Actions 构建产物提供，
+不再自动尝试 Release 发布。APK 构建产物：
+https://github.com/xyychenchen/siyuan/actions/runs/41281349799/artifacts/13073393626
+
+AWS 测试部署控制脚本位于原私有仓库 xyychenchen/flow 的 infra/siyuan 目录，
+只复用之前的部署密钥和 HTTPS 入口，不使用原 Flow 软件的界面或同步实现。
