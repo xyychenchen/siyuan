@@ -67,3 +67,23 @@ https://github.com/xyychenchen/siyuan/actions/runs/41281349799/artifacts/1307339
 
 AWS 测试部署控制脚本位于原私有仓库 xyychenchen/flow 的 infra/siyuan 目录，
 只复用之前的部署密钥和 HTTPS 入口，不使用原 Flow 软件的界面或同步实现。
+
+## AWS 测试服务已部署
+
+入口：https://uu.kv3389.xyz/
+WebDAV：https://uu.kv3389.xyz/selfhost-sync/
+同步目录：main。
+
+服务器已配置自动同步，并完成第一次加密仓库发布。
+部署验证：https://github.com/xyychenchen/flow/actions/runs/41287636295
+验证包含：无思源账号的 API 操作、HTTPS 版本、私有配置鉴权、WebDAV 鉴权以及首次加密同步。
+
+在自己的 AWS SSH 终端执行 `cat ~/siyuan-test/.env` 查看连接凭据，不要发到聊天或 Issue。
+- NOTES_ACCESS_CODE：网页访问密码。
+- SYNC_USER、SYNC_PASSWORD：手机 WebDAV 配置的用户名和密码。
+- NOTES_REPO_KEY：手机需要导入的数据仓库密钥。
+
+安装修改版 Android APK 后，选择 WebDAV，填上以上地址和凭据、目录 main，
+导入同一份仓库密钥，再启用自动同步。手机 App 不需要登录思源官方账号。
+手机实机界面、系统后台省电限制和并发编辑冲突仍需实际使用验收。
+服务器测试镜像未打包可选 PaddleOCR 工作进程。
