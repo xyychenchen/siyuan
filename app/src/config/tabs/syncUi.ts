@@ -5,7 +5,7 @@ import {ContractFormData} from "../../util/contractFormData";
 import type {APICallbackResponse, APIPOSTRoutes} from "../../types/api";
 import {confirmDialog} from "../../dialog/confirmDialog";
 import {isInIOS, saveExportFile} from "../../protyle/util/compatibility";
-import {isPaidUser, needSubscribe} from "../../util/needSubscribe";
+import {canUseSyncProvider, needSubscribe} from "../../util/needSubscribe";
 import {getCloudURL} from "../util/about";
 import {getHostCapabilities, sanitizeKernelHTML} from "../../util/hostCapabilities";
 import {Dialog} from "../../dialog";
@@ -29,14 +29,14 @@ export const refreshSyncModeRelatedItems = (root: Element) => {
 
 /** 根据云端同步和运行环境刷新局域网同步配置项可见性 */
 export const refreshLANSyncConfigItemVisibility = (root: Element) => {
-    const visible = window.siyuan.config.sync.provider === 0 ? !needSubscribe("") : isPaidUser();
+    const visible = canUseSyncProvider();
     root.querySelector(`#${CSS.escape("sync.lan.enabled")}`)?.closest(".config-item")?.classList.toggle(
         "fn__none", !visible || !window.siyuan.config.sync.enabled || window.siyuan.config.system.container === "docker");
 };
 
 /** 搜索时区分局域网同步的前置条件和硬性使用限制 */
 export const getLANSyncSearchAvailability = () => {
-    const entitled = window.siyuan.config.sync.provider === 0 ? !needSubscribe("") : isPaidUser();
+    const entitled = canUseSyncProvider();
     if (!entitled || window.siyuan.config.system.container === "docker") {
         return {available: false};
     }
@@ -47,7 +47,7 @@ export const getLANSyncSearchAvailability = () => {
 };
 
 const setSyncConfigItemVisible = (root: Element) => {
-    const visible = window.siyuan.config.sync.provider === 0 ? !needSubscribe("") : isPaidUser();
+    const visible = canUseSyncProvider();
     [
         "cloudSpace",
         "sync.enabled",
@@ -73,7 +73,7 @@ const setSyncModeRelatedConfigItemVisible = (root: Element) => {
         return;
     }
     const syncMode: Config.ISync["mode"] = Number(syncModeElement.value);
-    const isProviderOfficialAutoSync = syncMode === 1 && !needSubscribe("");
+    const isProviderOfficialAutoSync = syncMode === 1 && canUseSyncProvider();
     root.querySelector(`#${CSS.escape("sync.interval")}`)?.closest(".config-item")?.classList.toggle("fn__none", !isProviderOfficialAutoSync);
     root.querySelector(`#${CSS.escape("sync.perception")}`)?.closest(".config-item")?.classList.toggle("fn__none", !(isProviderOfficialAutoSync && window.siyuan.config.sync.provider === 0 && window.siyuan.config.system.container !== "docker"));
 };
@@ -176,7 +176,7 @@ const SYNC_PROVIDER_DEFS: Record<Config.ISync["provider"], SyncProviderDef> = {
         },
     },
     2: {
-        isProviderConfigAllowed: isPaidUser,
+        isProviderConfigAllowed: () => canUseSyncProvider(2),
         configKey: "s3",
 
         getConfig: () => window.siyuan.config.sync.s3,
@@ -207,7 +207,7 @@ const SYNC_PROVIDER_DEFS: Record<Config.ISync["provider"], SyncProviderDef> = {
         ],
     },
     3: {
-        isProviderConfigAllowed: isPaidUser,
+        isProviderConfigAllowed: () => canUseSyncProvider(3),
         configKey: "webdav",
 
         getConfig: () => window.siyuan.config.sync.webdav,
@@ -232,7 +232,7 @@ const SYNC_PROVIDER_DEFS: Record<Config.ISync["provider"], SyncProviderDef> = {
         ],
     },
     4: {
-        isProviderConfigAllowed: isPaidUser,
+        isProviderConfigAllowed: () => canUseSyncProvider(4),
         configKey: "local",
 
         getConfig: () => window.siyuan.config.sync.local,

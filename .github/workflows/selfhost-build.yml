@@ -1,0 +1,113 @@
+name: Self-hosted SiYuan test builds
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'app/src/**'
+      - 'kernel/**'
+      - 'scripts/selfhost/**'
+      - '.github/workflows/selfhost-build.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: selfhost-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  ui:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - run: npm install --global pnpm@12.6.0
+      - run: pnpm install --frozen-lockfile
+        working-directory: app
+      - run: pnpm run lint
+        working-directory: app
+      - name: Sync UI regression tests
+        run: node --import tsx --test src/util/needSubscribe.test.ts src/config/tabs/syncUi.test.ts
+        working-directory: app
+      - name: Build official mobile and web interfaces
+        run: pnpm run build:mobile && pnpm run build:desktop && pnpm run build:export
+        working-directory: app
+      - name: Package shared resources
+        run: |
+          cd app
+          zip -qr ../selfhost-ui.zip appearance guide stage changelogs -x '*.map' 'stage/ocr/runtime/*'
+          zip -j ../selfhost-ui.zip ../LICENSE ../THIRD_PARTY_NOTICES.md
+      - uses: actions/upload-artifact@v6
+        with:
+          name: selfhost-ui
+          path: selfhost-ui.zip
+  kernel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: kernel/go.mod
+          cache-dependency-path: kernel/go.sum
+      - name: Verify Go formatting
+        run: test -z "$(gofmt -l model/sync.go model/repository.go model/asset_download.go model/sync_config_test.go)"
+        working-directory: kernel
+      - name: Sync and storage regression tests
+        run: go test -tags 'fts5 sqlcipher' ./model -run 'Test(CheckSyncPreservesEnabledWithoutUser|SelfHostedSyncWithoutSiYuanAccount|.*WebDAV.*|.*SyncDirectory.*|CloudAssetSource.*)' -count=1
+        working-directory: kernel
+      - name: Build isolated Linux test kernel
+        run: go build -tags 'fts5 sqlcipher' -ldflags '-s -w' -o ../SiYuan-Kernel .
+        working-directory: kernel
+      - uses: actions/upload-artifact@v6
+        with:
+          name: selfhost-linux-amd64
+          path: SiYuan-Kernel
+  android:
+    needs: [ui, kernel]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: kernel/go.mod
+          cache-dependency-path: kernel/go.sum
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Android SDK and NDK
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;28.2.13676358' 'platforms;android-36'
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> "$GITHUB_ENV"
+      - name: Build modified mobile kernel
+        working-directory: kernel
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@2553ed8ce294
+          "$(go env GOPATH)/bin/gomobile" init
+          "$(go env GOPATH)/bin/gomobile" bind -tags 'fts5 sqlcipher' -ldflags '-s -w' -o kernel.aar -target android/arm64 -androidapi 26 ./mobile/
+      - uses: actions/checkout@v7
+        with:
+          repository: siyuan-note/siyuan-android
+          ref: 514262967127178d928d76e793103b2c20ac8bc0
+          path: android-shell
+      - uses: actions/download-artifact@v7
+        with:
+          name: selfhost-ui
+          path: ui-artifact
+      - name: Prepare unofficial test build
+        run: python3 scripts/selfhost/prepare_android.py
+      - name: Build APK
+        working-directory: android-shell
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleOfficialDebug
+      - uses: actions/upload-artifact@v6
+        with:
+          name: siyuan-selfhost-android-arm64-test
+          path: android-shell/app/build/outputs/apk/official/debug/*.apk

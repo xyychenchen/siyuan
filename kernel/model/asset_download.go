@@ -99,7 +99,7 @@ func validateAssetDownloadSourceScope(scope string) error {
 func checkAssetDownloadAccess() error {
 	confSyncSnapshot := Conf.LoadSync()
 
-	if confSyncSnapshot == nil || !confSyncSnapshot.Enabled || Conf.GetUser() == nil {
+	if confSyncSnapshot == nil || !confSyncSnapshot.Enabled {
 		return errors.New(Conf.Language(376))
 	}
 	switch confSyncSnapshot.Provider {
@@ -108,9 +108,9 @@ func checkAssetDownloadAccess() error {
 			return errors.New(Conf.Language(376))
 		}
 	case conf.ProviderS3, conf.ProviderWebDAV, conf.ProviderLocal:
-		if !IsPaidUser() {
-			return errors.New(Conf.Language(376))
-		}
+		// Authentication is handled by the configured storage provider.
+	default:
+		return errors.New(Conf.Language(376))
 	}
 	return nil
 }

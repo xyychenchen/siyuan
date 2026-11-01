@@ -22,3 +22,8 @@ export const needSubscribe = (tip = window.siyuan.languages._kernel[29]) => {
 export const isPaidUser = () => {
     return window.siyuan.user && (0 === window.siyuan.user.userSiYuanSubscriptionStatus || 1 === window.siyuan.user.userSiYuanOneTimePayStatus);
 };
+
+/** Self-hosted sync uses storage credentials rather than a SiYuan subscription. */
+export const canUseSyncProvider = (provider = window.siyuan.config.sync.provider): boolean => {
+    return provider === 2 || provider === 3 || provider === 4 || (provider === 0 && !needSubscribe(""));
+};

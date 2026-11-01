@@ -452,7 +452,7 @@ func checkSync(boot, exit, byHand bool) bool {
 		}
 		return false
 	}
-	if nil == Conf.GetUser() {
+	if confSyncReadSnapshot.Provider == conf.ProviderSiYuan && nil == Conf.GetUser() {
 		return false
 	}
 
@@ -463,10 +463,9 @@ func checkSync(boot, exit, byHand bool) bool {
 			return false
 		}
 	case conf.ProviderWebDAV, conf.ProviderS3, conf.ProviderLocal:
-		if !IsPaidUser() {
-			UpdateSyncConf(func(s *conf.Sync) { s.Enabled = false })
-			return false
-		}
+		// Self-hosted storage does not require a SiYuan account.
+	default:
+		return false
 	}
 
 	if !byHand && !exit && notifyAutoSyncPaused() {

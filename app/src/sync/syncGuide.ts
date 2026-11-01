@@ -1,5 +1,5 @@
 import {config as configApi} from "../config/util/configApi";
-import {isPaidUser, needSubscribe} from "../util/needSubscribe";
+import {canUseSyncProvider, needSubscribe} from "../util/needSubscribe";
 import {showMessage} from "../dialog/message";
 import {fetchPost} from "../util/fetch";
 import {Dialog} from "../dialog";
@@ -205,7 +205,7 @@ export const syncGuide = (app?: App) => {
         openSyncSetting(app);
         showMessage(window.siyuan.languages._kernel[29].replaceAll("${accountServer}", getCloudURL("")));
         return;
-    } else if (!isPaidUser()) {
+    } else if (!canUseSyncProvider()) {
         openSyncSetting(app);
         showMessage(window.siyuan.languages._kernel[214].replaceAll("${accountServer}", getCloudURL("")));
         return;

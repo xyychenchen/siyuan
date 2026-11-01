@@ -127,7 +127,7 @@ const setup = (provider = 2, mobile = false, manualRules = false) => {
                 })};
             }
             if (name === "../../util/functions") { return {isMobile: () => mobile}; }
-            if (name === "../../util/needSubscribe") { return {isPaidUser: () => true, needSubscribe: () => false}; }
+            if (name === "../../util/needSubscribe") { return {canUseSyncProvider: () => true, needSubscribe: () => false}; }
             if (name === "../../sync/syncGuide") { return syncGuide; }
             return {};
         },
@@ -504,7 +504,7 @@ const setupPanels = (mobile: boolean) => {
     runInNewContext(code, {
         exports, CSS: {escape: (value: string) => value},
         window: {siyuan: {config: {sync, readonly: false, system: {container: mobile ? "android" : "std"}}, languages}},
-        require: () => ({escapeHtmlTextAndAttr, canPurgeRepo, isPaidUser: () => true, needSubscribe: () => false,
+        require: () => ({escapeHtmlTextAndAttr, canPurgeRepo, canUseSyncProvider: () => true, needSubscribe: () => false,
             getCloudURL: () => "https://example.com", getHostCapabilities: () => ({importExport: !mobile})}),
     });
     return {sync, intro, row, purge, root, exports, languages};
