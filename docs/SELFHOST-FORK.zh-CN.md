@@ -43,3 +43,7 @@ org.b3log.siyuan.debug，不覆盖官方 App。界面保持原样。
 前端类型、代码规范检查和同步设置相关 33 项回归测试已在开发环境通过。
 扩展受影响测试包含 Electron 窗口用例，开发环境以 root 运行时受 Chromium 沙箱限制；
 这部分改在普通用户的 GitHub Actions 虚拟显示环境执行，结果需以对应日志为准。
+
+两份独立真实内核工作空间的 WebDAV 联调已通过：双向笔记传输、附件传输、
+存储不可达时保留本地新笔记、存储恢复后自动同步成功。测试脚本位于 scripts/selfhost/smoke.py。
+Android ARM64 测试 APK 已成功编译，但尚未进行实体手机操作验证。

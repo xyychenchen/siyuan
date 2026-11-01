@@ -55,6 +55,12 @@ jobs:
       - run: npm install --global pnpm@12.6.0
       - run: pnpm install --frozen-lockfile
         working-directory: app
+      - name: Configure Electron sandbox helper
+        working-directory: app
+        run: |
+          sandbox=$(node -p "require('path').join(require('path').dirname(require('electron')), 'chrome-sandbox')")
+          sudo chown root:root "$sandbox"
+          sudo chmod 4755 "$sandbox"
       - name: Load original fork baseline
         run: git fetch --depth=1 origin d3af9d5782082b379d45a69eedf4ebcfe8ba6889
       - name: Affected frontend tests with a virtual display
@@ -86,6 +92,12 @@ jobs:
       - name: Build isolated Linux test kernel
         run: go build -tags 'fts5 sqlcipher' -ldflags '-s -w' -o ../SiYuan-Kernel .
         working-directory: kernel
+      - name: Two-workspace WebDAV and offline roundtrip
+        run: |
+          cd kernel
+          go build -o "$RUNNER_TEMP/webdav-fixture" ../scripts/selfhost/webdav-fixture.go
+          cd ..
+          python3 scripts/selfhost/smoke.py --kernel ./SiYuan-Kernel --resources ./app --fixture "$RUNNER_TEMP/webdav-fixture"
       - uses: actions/upload-artifact@v6
         with:
           name: selfhost-linux-amd64
