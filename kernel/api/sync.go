@@ -405,13 +405,8 @@ func performSyncContract(c *gin.Context, request apicontract.PerformSyncRequest)
 
 	// Android 端前后台切换时自动触发同步 https://github.com/siyuan-note/siyuan/issues/7122
 	mobileSwitch := request.MobileSwitch
-	if mobileSwitch {
-		if !util.IsBooted() {
-			return
-		}
-		if nil == model.Conf.GetUser() || !confSyncSnapshot.Enabled {
-			return
-		}
+	if mobileSwitch && !canTriggerMobileSync(confSyncSnapshot, util.IsBooted(), model.Conf.GetUser() != nil) {
+		return
 	}
 
 	if 3 != confSyncSnapshot.Mode {
@@ -691,4 +686,19 @@ func setCloudSyncDirContract(c *gin.Context, request apicontract.SyncNameRequest
 		ret = apicontract.Failure[apicontract.Null](-1, err.Error())
 	}
 	return
+}
+
+// Mobile lifecycle sync requires local readiness and provider-specific credentials.
+func canTriggerMobileSync(sync *conf.Sync, booted, hasAccount bool) bool {
+	if !booted || !sync.Enabled {
+		return false
+	}
+	switch sync.Provider {
+	case conf.ProviderSiYuan:
+		return hasAccount
+	case conf.ProviderS3, conf.ProviderWebDAV, conf.ProviderLocal:
+		return true
+	default:
+		return false
+	}
 }

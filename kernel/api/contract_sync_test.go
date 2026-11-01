@@ -390,3 +390,29 @@ func syncMarshal[T any](t *testing.T, value T) []byte {
 	}
 	return data
 }
+
+func TestAPIContractSyncMobileSwitchWithoutAccount(t *testing.T) {
+	for _, provider := range []int{conf.ProviderS3, conf.ProviderWebDAV, conf.ProviderLocal} {
+		sync := conf.NewSync()
+		sync.Provider, sync.Enabled = provider, true
+		if !canTriggerMobileSync(sync, true, false) {
+			t.Fatalf("self-hosted provider %d requires an account", provider)
+		}
+		if canTriggerMobileSync(sync, false, false) {
+			t.Fatal("mobile sync must wait for boot")
+		}
+		sync.Enabled = false
+		if canTriggerMobileSync(sync, true, false) {
+			t.Fatal("disabled sync must remain disabled")
+		}
+	}
+	sync := conf.NewSync()
+	sync.Enabled = true
+	if canTriggerMobileSync(sync, true, false) || !canTriggerMobileSync(sync, true, true) {
+		t.Fatal("official cloud account requirement changed")
+	}
+	sync.Provider = -1
+	if canTriggerMobileSync(sync, true, true) {
+		t.Fatal("unknown provider accepted")
+	}
+}

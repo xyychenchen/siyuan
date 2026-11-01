@@ -28,7 +28,7 @@ GitHub Actions 的 Self-hosted SiYuan test builds 工作流执行检查并生成
 - siyuan-selfhost-android-arm64-test：Android 8+、ARM64 测试 APK。
 
 Android 壳固定为 siyuan-note/siyuan-android 的
-514262967127178d928d76e793103b2c20ac8bc0，资源和内核来自当前 fork 提交。
+9adea3ae243ea18c5a9c83ac1ed2394f582f643a，资源和内核来自当前 fork 提交。
 构建脚本把版本号调整为对应内核版本，并使用官方 Debug 变体的独立包名
 org.b3log.siyuan.debug，不覆盖官方 App。界面保持原样。
 目前使用 CI 临时调试签名，后续构建不保证能覆盖安装；长期使用前需要固定私有签名。
@@ -39,3 +39,7 @@ org.b3log.siyuan.debug，不覆盖官方 App。界面保持原样。
 构建和回归测试通过不等于手机端到端同步通过。
 正式交付前必须验证：两端互传、附件、离线修改后重连、错误凭据、重启持久化以及冲突文档。
 本测试工作流只生成产物，不会改动现有 AWS 服务或已有数据。
+
+前端类型、代码规范检查和同步设置相关 33 项回归测试已在开发环境通过。
+扩展受影响测试包含 Electron 窗口用例，开发环境以 root 运行时受 Chromium 沙箱限制；
+这部分改在普通用户的 GitHub Actions 虚拟显示环境执行，结果需以对应日志为准。

@@ -44,6 +44,27 @@ jobs:
         with:
           name: selfhost-ui
           path: selfhost-ui.zip
+  regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - run: npm install --global pnpm@12.6.0
+      - run: pnpm install --frozen-lockfile
+        working-directory: app
+      - name: Load original fork baseline
+        run: git fetch --depth=1 origin d3af9d5782082b379d45a69eedf4ebcfe8ba6889
+      - name: Affected frontend tests with a virtual display
+        working-directory: app
+        run: xvfb-run -a pnpm run test:affected --base d3af9d5782082b379d45a69eedf4ebcfe8ba6889 > ../selfhost-tests.log 2>&1
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: selfhost-regression-log
+          path: selfhost-tests.log
   kernel:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
@@ -54,10 +75,13 @@ jobs:
           go-version-file: kernel/go.mod
           cache-dependency-path: kernel/go.sum
       - name: Verify Go formatting
-        run: test -z "$(gofmt -l model/sync.go model/repository.go model/asset_download.go model/sync_config_test.go)"
+        run: test -z "$(gofmt -l model/sync.go model/repository.go model/asset_download.go model/sync_config_test.go api/sync.go api/contract_sync_test.go)"
         working-directory: kernel
       - name: Sync and storage regression tests
         run: go test -tags 'fts5 sqlcipher' ./model -run 'Test(CheckSyncPreservesEnabledWithoutUser|SelfHostedSyncWithoutSiYuanAccount|.*WebDAV.*|.*SyncDirectory.*|CloudAssetSource.*)' -count=1
+        working-directory: kernel
+      - name: Sync API regression tests
+        run: go test -tags 'fts5 sqlcipher' ./api -run 'TestAPIContractSync' -count=1
         working-directory: kernel
       - name: Build isolated Linux test kernel
         run: go build -tags 'fts5 sqlcipher' -ldflags '-s -w' -o ../SiYuan-Kernel .
@@ -93,7 +117,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: siyuan-note/siyuan-android
-          ref: 514262967127178d928d76e793103b2c20ac8bc0
+          ref: 9adea3ae243ea18c5a9c83ac1ed2394f582f643a
           path: android-shell
       - uses: actions/download-artifact@v7
         with:
