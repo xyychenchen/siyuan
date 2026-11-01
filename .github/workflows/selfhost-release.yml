@@ -1,0 +1,48 @@
+name: Publish self-hosted test artifacts
+on:
+  workflow_run:
+    workflows: [Self-hosted SiYuan test builds]
+    types: [completed]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'master' && github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: selfhost-ui
+          path: dist
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v7
+        with:
+          name: selfhost-linux-amd64
+          path: dist
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v7
+        with:
+          name: siyuan-selfhost-android-arm64-test
+          path: dist
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Publish matching test build with checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_SHA: ${{ github.event.workflow_run.head_sha }}
+          BUILD_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          set -euo pipefail
+          [[ "$BUILD_SHA" =~ ^[0-9a-f]{40}$ ]]
+          tag="selfhost-test-${BUILD_SHA:0:12}"
+          (cd dist && sha256sum * > SHA256SUMS)
+          printf 'Unofficial personal test build. Source commit: %s\n\nBuild and tests: %s\n\nAGPL-3.0-or-later. Uses the official SiYuan interface and existing encrypted sync engine. Self-hosted S3/WebDAV/local sync does not require a SiYuan account; official cloud still requires a subscription.\n\nAndroid ARM64, Android 8+. Debug application ID org.b3log.siyuan.debug. CI debug signing is temporary; back up local workspaces before replacing test APKs. Device/offline/conflict testing is still required.\n' "$BUILD_SHA" "$BUILD_URL" > notes.md
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$tag" dist/* --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$tag" dist/* --repo "$GITHUB_REPOSITORY" --target "$BUILD_SHA" --prerelease --title "Self-hosted test ${BUILD_SHA:0:12}" --notes-file notes.md
+          fi
