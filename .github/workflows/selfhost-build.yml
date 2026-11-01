@@ -58,7 +58,8 @@ jobs:
       - name: Configure Electron sandbox helper
         working-directory: app
         run: |
-          sandbox=$(node -p "require('path').join(require('path').dirname(require('electron')), 'chrome-sandbox')")
+          node -e "require('electron')"
+          sandbox=$(node -p "require('path').join(require('path').dirname(require.resolve('electron')), 'dist', 'chrome-sandbox')")
           sudo chown root:root "$sandbox"
           sudo chmod 4755 "$sandbox"
       - name: Load original fork baseline

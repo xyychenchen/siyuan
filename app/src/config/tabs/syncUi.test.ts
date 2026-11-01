@@ -552,3 +552,9 @@ for (const mobile of [false, true]) {
         assert.match(ui.row.innerHTML, /data-action="configureSync"/);
     });
 }
+
+test("self-hosted provider introductions do not advertise a required SiYuan purchase", () => {
+    const ui = setupPanels(false);
+    ui.exports.refreshSyncTabPanels(ui.root as unknown as Element);
+    assert.equal(ui.intro.innerHTML.includes("proFeature"), false);
+});

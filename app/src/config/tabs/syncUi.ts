@@ -183,8 +183,6 @@ const SYNC_PROVIDER_DEFS: Record<Config.ISync["provider"], SyncProviderDef> = {
         genIntro: () => `<div class="b3-label b3-label--inner">
     ${window.siyuan.languages.syncThirdPartyProviderS3Intro}
     <div class="fn__hr"></div>
-    <em>${window.siyuan.languages.proFeature}</em>
-    <div class="fn__hr"></div>
     ${window.siyuan.languages.syncThirdPartyProviderTip}
 </div>`,
         genUnpaidIntro: genThirdPartyUnpaidIntro,
@@ -214,8 +212,6 @@ const SYNC_PROVIDER_DEFS: Record<Config.ISync["provider"], SyncProviderDef> = {
         genIntro: () => `<div class="b3-label b3-label--inner">
     ${window.siyuan.languages.syncThirdPartyProviderWebDAVIntro}
     <div class="fn__hr"></div>
-    <em>${window.siyuan.languages.proFeature}</em>
-    <div class="fn__hr"></div>
     ${window.siyuan.languages.syncThirdPartyProviderTip}
 </div>`,
         genUnpaidIntro: genThirdPartyUnpaidIntro,
@@ -243,7 +239,6 @@ const SYNC_PROVIDER_DEFS: Record<Config.ISync["provider"], SyncProviderDef> = {
     <div class="fn__hr"></div>
     ${window.siyuan.languages.syncThirdPartyProviderLocalIntro}
     <div class="fn__hr"></div>
-    <em>${window.siyuan.languages.proFeature}</em>
 </div>`,
         genUnpaidIntro: () => `${genThirdPartyUnpaidIntro()}<div class="ft__error">
     <div class="fn__hr--b"></div>
@@ -282,7 +277,6 @@ const buildProviderConfigKeywords = (): string[] => {
         window.siyuan.languages.syncThirdPartyProviderS3Intro,
         window.siyuan.languages.syncThirdPartyProviderWebDAVIntro,
         window.siyuan.languages.syncThirdPartyProviderLocalIntro,
-        window.siyuan.languages.proFeature,
         window.siyuan.languages.syncThirdPartyProviderTip,
         ...getSyncProviderConfigRowKeywords(),
     ];
